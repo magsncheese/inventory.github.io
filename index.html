@@ -107,10 +107,9 @@
       const xhr = new XMLHttpRequest();
       xhr.open('GET', 'inventory.json', true);
       xhr.onload = function () {
+              xhr.onload = function () {
         if (xhr.status === 200) {
           // Parse the JSON response and pass it to the callback function
-          const inventoryData = JSON.parse(xhr.responseText);
-          callback(in
           const inventoryData = JSON.parse(xhr.responseText);
           callback(inventoryData);
         }
@@ -135,7 +134,7 @@
         itemInfo.appendChild(itemName);
 
         const itemPrice = document.createElement('p');
-        itemPrice.textContent = 'Price: $' + item.price;
+        itemPrice.textContent = 'Price: $' + item.price.toFixed(2);
         itemInfo.appendChild(itemPrice);
 
         const itemSKU = document.createElement('p');
