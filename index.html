@@ -107,8 +107,10 @@
       const xhr = new XMLHttpRequest();
       xhr.open('GET', 'inventory.json', true);
       xhr.onload = function () {
-                if (xhr.status === 200) {
+        if (xhr.status === 200) {
           // Parse the JSON response and pass it to the callback function
+          const inventoryData = JSON.parse(xhr.responseText);
+          callback(in
           const inventoryData = JSON.parse(xhr.responseText);
           callback(inventoryData);
         }
@@ -223,4 +225,3 @@
   </script>
 </body>
 </html>
-
