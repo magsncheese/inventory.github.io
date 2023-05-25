@@ -3,44 +3,224 @@
 <head>
   <title>Inventory Website</title>
   <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    body {
+      background-color: #C0D8B6;
+      font-family: Arial, sans-serif;
     }
-    
-    table, th, td {
-      border: 1px solid black;
-      padding: 5px;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #FFF;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 3px;
+      border: 1px solid #CCC;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #FFF;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .item-info {
+      flex: 1;
+      margin-right: 10px;
+    }
+    .item-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .delete-btn {
+      background-color: #FF4136;
     }
   </style>
 </head>
 <body>
-  <h1>Inventory Website</h1>
-  <form id="addItemForm">
-    <label for="itemName">Item Name:</label>
-    <input type="text" id="itemName" required>
-    <br>
-    <label for="price">Price:</label>
-    <input type="number" id="price" required>
-    <br>
-    <label for="sku">SKU #:</label>
-    <input type="text" id="sku" required>
-    <br>
-    <label for="quantity">Quantity:</label>
-    <input type="number" id="quantity" required>
-    <br>
-    <input type="submit" value="Add Item">
-  </form>
-  <br>
-  <table id="inventoryTable">
-    <tr>
-      <th>Item Name</th>
-      <th>Price</th>
-      <th>SKU #</th>
-      <th>Quantity</th>
-    </tr>
-  </table>
+  <div class="container">
+    <h1>Inventory Website</h1>
 
-  <script src="script.js"></script>
+    <form id="inventory-form">
+      <label for="item-name">Item Name:</label>
+      <input type="text" id="item-name" required>
+
+      <label for="item-price">Price:</label>
+      <input type="number" id="item-price" required>
+
+      <label for="item-sku">SKU:</label>
+      <input type="text" id="item-sku" required>
+
+      <label for="item-quantity">Quantity:</label>
+      <input type="number" id="item-quantity" required>
+
+      <button type="submit">Add Item</button>
+    </form>
+
+    <div id="inventory-list"></div>
+  </div>
+
+  <script>
+    // Function to save inventory data to the file
+    function saveInventoryData(data) {
+      // Convert the inventory data to JSON string
+      const jsonData = JSON.stringify(data);
+
+      // Create a new Blob with the JSON data
+      const blob = new Blob([jsonData], { type: 'application/json' });
+
+      // Create a URL for the Blob object
+      const url = URL.createObjectURL(blob);
+
+      // Create a link element to trigger the file download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'inventory.json';
+
+      // Programmatically click the link to initiate the file download
+      link.click();
+    }
+
+    // Function to load inventory data from the file
+    function loadInventoryData(callback) {
+      // Make an AJAX request to fetch the JSON file
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', 'inventory.json', true);
+      xhr.onload = function () {
+                if (xhr.status === 200) {
+          // Parse the JSON response and pass it to the callback function
+          const inventoryData = JSON.parse(xhr.responseText);
+          callback(inventoryData);
+        }
+      };
+      xhr.send();
+    }
+
+    // Function to display inventory items on the webpage
+    function displayInventoryItems(inventory) {
+      const inventoryList = document.getElementById('inventory-list');
+      inventoryList.innerHTML = '';
+
+      inventory.forEach(function (item) {
+        const itemContainer = document.createElement('div');
+        itemContainer.classList.add('item');
+
+        const itemInfo = document.createElement('div');
+        itemInfo.classList.add('item-info');
+
+        const itemName = document.createElement('h3');
+        itemName.textContent = item.itemName;
+        itemInfo.appendChild(itemName);
+
+        const itemPrice = document.createElement('p');
+        itemPrice.textContent = 'Price: $' + item.price;
+        itemInfo.appendChild(itemPrice);
+
+        const itemSKU = document.createElement('p');
+        itemSKU.textContent = 'SKU: ' + item.sku;
+        itemInfo.appendChild(itemSKU);
+
+        const itemQuantity = document.createElement('p');
+        itemQuantity.textContent = 'Quantity: ' + item.quantity;
+        itemInfo.appendChild(itemQuantity);
+
+        const itemActions = document.createElement('div');
+        itemActions.classList.add('item-actions');
+
+        const decreaseButton = document.createElement('button');
+        decreaseButton.textContent = '-';
+        decreaseButton.addEventListener('click', function () {
+          if (item.quantity > 0) {
+            item.quantity--;
+            saveInventoryData(inventory);
+            displayInventoryItems(inventory);
+          }
+        });
+        itemActions.appendChild(decreaseButton);
+
+        const increaseButton = document.createElement('button');
+        increaseButton.textContent = '+';
+        increaseButton.addEventListener('click', function () {
+          item.quantity++;
+          saveInventoryData(inventory);
+          displayInventoryItems(inventory);
+        });
+        itemActions.appendChild(increaseButton);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.classList.add('delete-btn');
+        deleteButton.addEventListener('click', function () {
+          const index = inventory.indexOf(item);
+          if (index > -1) {
+            inventory.splice(index, 1);
+            saveInventoryData(inventory);
+            displayInventoryItems(inventory);
+          }
+        });
+        itemActions.appendChild(deleteButton);
+
+        itemContainer.appendChild(itemInfo);
+        itemContainer.appendChild(itemActions);
+
+        inventoryList.appendChild(itemContainer);
+      });
+    }
+
+    // Load inventory data from the file and display it on the webpage
+    loadInventoryData(function (inventoryData) {
+      const inventory = inventoryData || [];
+      displayInventoryItems(inventory);
+    });
+
+    // Add event listener for the inventory form submission
+    const inventoryForm = document.getElementById('inventory-form');
+    inventoryForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      const itemNameInput = document.getElementById('item-name');
+      const itemPriceInput = document.getElementById('item-price');
+      const itemSKUInput = document.getElementById('item-sku');
+      const itemQuantityInput = document.getElementById('item-quantity');
+
+      const newItem = {
+        itemName: itemNameInput.value,
+        price: parseFloat(itemPriceInput.value),
+        sku: itemSKUInput.value,
+        quantity: parseInt(itemQuantityInput.value),
+      };
+
+      loadInventoryData(function (inventoryData) {
+        const inventory = inventoryData || [];
+        inventory.push(newItem);
+        saveInventoryData(inventory);
+        displayInventoryItems(inventory);
+      });
+
+      // Reset the form inputs
+      inventoryForm.reset();
+    });
+  </script>
 </body>
 </html>
+
